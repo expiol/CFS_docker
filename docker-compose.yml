@@ -1,1 +1,61 @@
+version: '3'
 
+services:
+struts2:
+image: vulhub/struts2:2.3.30
+container_name: "struts2"
+environment:
+- FLAG=${flag1}
+restart: always
+networks:
+internal_net:
+ipv4_address: 172.16.238.10 # Accessible only in the internal network
+
+tomcat:
+image: vulhub/tomcat:9.0.30
+ports:
+- "8002:8080" # Only expose Tomcat's port 8080 to the external network and attack through this service
+environment:
+- FLAG=${flag2}
+restart: always
+networks:
+internal_net:
+ipv4_address: 172.16.238.81
+external_net:
+ipv4_address: 10.10.5.6 # Visible to attackers in external networks
+
+solr:
+image: vulhub/solr:7.0.1
+container_name: "solr-CVE-2017-12629"
+environment:
+- FLAG=${flag3}
+restart: always
+networks:
+internal_net:
+ipv4_address: 172.16.238.88 # Only accessible in internal networks
+restricted_net:
+ipv4_address: 172.42.66.10
+
+jenkins:
+image: vulhub/jenkins:2.138
+container_name: "jenkins-CVE-2018-1000861"
+environment:
+- FLAG=${flag4}
+restart: always
+networks:
+restricted_net:
+ipv4_address: 172.42.66.77 # Only accessible in restricted networks
+
+networks:
+internal_net:
+ipam:
+config:
+- subnet: "172.16.0.0/16"
+external_net:
+ipam:
+config:
+- subnet: "10.10.5.0/24"
+restricted_net:
+ipam:
+config:
+- subnet: "172.42.66.0/24"
